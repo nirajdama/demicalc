@@ -1,0 +1,253 @@
+
+<!DOCTYPE html>
+<!--[if IE 8]> <html lang="en" class="ie8"> <![endif]-->  
+<!--[if IE 9]> <html lang="en" class="ie9"> <![endif]-->  
+<!--[if !IE]><!--> <html lang="en"> <!--<![endif]-->  
+    <head>
+                <title>SwitchMe - Choose Smart, Save Big</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+
+<!--<script type="text/javascript"  src="http://localhost/SM4/my_assets/plugins/jquery-1.10.2.min.js"></script>-->
+
+
+
+
+
+        
+            </head>
+    <body>
+                <div id="main-container">
+            <div class="container">
+    <br/><br/><br/>
+    <div class="row">
+        <div class="col-lg-6 col-md-6 col-sm-12 col-xs-12">
+            <div class="form-group">
+                <label>Outstanding Principal Amount</label>
+                <input type="text" class="form-control" id="outstanding_principal_amt" placeholder="Outstanding Principal Amount">
+            </div>
+
+            <div class="form-group">
+                <label>Months</label>
+                <input type="text" class="form-control" id="months" placeholder="Outstanding Principal Amount">
+            </div>
+
+            <div class="form-group">
+                <label>Interest Rate</label>
+                <input type="text" class="form-control" id="interest_rate" placeholder="Outstanding Principal Amount">
+            </div>
+            <button id="generate-chart" type="submit" class="btn btn-default">Generate</button>
+        </div>
+    </div>
+    <div class="row">
+        <br/><br/>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Month</th>
+                    <th>EMI</th>
+                    <th>Interest Rate</th>
+                    <th>Principal</th>
+                    <th>Interest</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody id="table-data">
+                <tr id="copy-html" class="hidden">
+                    <td class="sr-no"></td>
+                    <td class="a-month-count"></td>
+                    <td class="a-emi"><input type="text" name="input-emi" class="input-emi"></td>
+                    <td class="a-interest-rate"><input type="text" name="input-interest-rate" class="input-interest-rate"></td>
+                    <td class="a-principal"></td>
+                    <td class="a-interest"></td>
+                    <td class="a-balance"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    $('#generate-chart').on("click", function(e) {
+        var remaining_months = $('#months').val();
+        var principal_amount = $('#outstanding_principal_amt').val();
+        var interest_rate = $('#interest_rate').val();
+		$('.focus').remove();
+        $('#amortization-result').html("");
+        var emi = calculateEMI(principal_amount, remaining_months, interest_rate);
+        for (i = 1; i <= remaining_months; i++) {
+            $('#copy-html').find('.sr-no').html("");
+            $('#copy-html').find('.a-month-count').html("");
+            //$('#copy-html').find('.a-emi').html("");
+
+            $('#copy-html').find('.input-emi').val(emi);
+            console.log($('#copy-html').find('.input-emi').val() + " a");
+            //console.log($('#copy-html').find('.emi').val());
+            $('#copy-html').find('.a-principal').html("");
+            $('#copy-html').find('.a-interest').html("");
+            $('#copy-html').find('.a-balance').html("");
+
+
+            var remaining_principal_amount = $('.a-balance').last().html();
+            if (remaining_principal_amount == "") {
+                remaining_principal_amount = principal_amount;
+            }
+
+            $('#copy-html').find('.sr-no').html(i);
+            $('#copy-html').find('.a-month-count').html(i);
+
+            var interest_part = (remaining_principal_amount * (interest_rate / 12 / 100)).toFixed(2);
+            var principal_part = (emi - interest_part).toFixed(2);
+
+            $('#copy-html').find('.a-principal').html(principal_part);
+            $('#copy-html').find('.a-interest').html(interest_part);
+            //$('#copy-html').find('.emi').val(emi);
+            //$('#copy-html').find('.emi').val(emi + "");
+            //console.log($('#copy-html').find('.emi').val());
+            $('#copy-html').find('.a-balance').html((remaining_principal_amount - principal_part).toFixed(2));
+            $('#table-data').append("<tr class='focus' data-month='" + i + "' id='focus-" + i + "'>" + $('#copy-html').html() + "</tr>");
+            $('#focus-' + i).find('.input-emi').val(emi);
+            $('#focus-' + i).find('.input-interest-rate').val(interest_rate);
+        }
+    });
+
+    $(document).on("change", ".input-emi, .input-interest-rate", function(e) {
+        var remaining_months = $('#months').val();
+        var principal_amount = $('#outstanding_principal_amt').val();
+        var interest_rate = $('#interest_rate').val();
+        var emi = calculateEMI(principal_amount, remaining_months, interest_rate);
+
+        var entered_emi = $(this).closest('.focus').find('.input-emi').val();
+        var entered_interest_rate = $(this).closest('.focus').find('.input-interest-rate').val();
+
+        if (isNaN(entered_emi)) {
+            entered_emi = emi;
+        }
+        if (isNaN(entered_interest_rate)) {
+            entered_interest_rate = interest_rate;
+        }
+        //console.log(entered_emi);
+        //return false;
+        var month = $(this).closest('.focus').data('month');
+        //console.log($(this).closest('.focus').data('month'));
+        //$(this).closest('.focus').data('month');
+        //var interest_rate = $('#interest_rate').val();
+        var interest_rate = entered_interest_rate;
+		//console.log(interest_rate);
+        //return false;
+        
+        if (month - 1 >= 1) {
+            balance_amount = $('#focus-' + (month - 1)).find('.a-balance').html();
+        } else {
+            balance_amount = $('#outstanding_principal_amt').val();
+        }
+		
+		i = month;
+        while (balance_amount >= 0) {
+            var interest_part = (balance_amount * (interest_rate / 12 / 100)).toFixed(2);
+			console.log(interest_part);
+			if (i != month) {   
+				var principal_part = (emi - interest_part).toFixed(2);
+			}else{
+				var principal_part = (entered_emi - interest_part).toFixed(2);
+			}
+            console.log(principal_part)
+            console.log(balance_amount);
+            console.log($('#focus-' + i).length);
+            console.log('--');
+            if ($('#focus-' + i).length >= 1) {
+                $('#focus-' + i).find('.a-principal').html(principal_part);
+                $('#focus-' + i).find('.a-interest').html(interest_part);
+                $('#focus-' + i).find('.a-balance').html((balance_amount - principal_part).toFixed(2));
+                if (i != month) {
+                    $('#focus-' + i).find('.input-emi').val(emi);
+                }
+                $('#focus-' + i).find('.input-interest-rate').val(entered_interest_rate);
+            } else {
+                $('#copy-html').find('.sr-no').html(i);
+                console.log(i + " = " + i);
+                $('#copy-html').find('.a-month-count').html(i);
+                $('#copy-html').find('.a-principal').html(principal_part);
+                $('#copy-html').find('.a-interest').html(interest_part);
+                $('#copy-html').find('.a-balance').html((balance_amount - principal_part).toFixed(2));
+                $('#table-data').append("<tr class='focus' data-month='" + i + "' id='focus-" + i + "'>" + $('#copy-html').html() + "</tr>");
+                //$('#focus-' + i).find('.input-emi').val(emi);
+                $('#focus-' + i).find('.input-emi').val(emi);
+                $('#focus-' + i).find('.input-interest-rate').val(entered_interest_rate);
+            }
+            balance_amount = balance_amount - principal_part;
+            //$('#copy-html').find('.emi').val(emi);
+            //$('#copy-html').find('.emi').val(emi + "");
+            //console.log($('#copy-html').find('.emi').val());
+            //$('#copy-html').find('.a-balance').html(remaining_principal_amount - principal_part);
+            //$('#table-data').append("<tr class='focus' data-month='" + i + "' id='focus-" + i + "'>" + $('#copy-html').html() + "</tr>");
+            //$('#focus-' + i).find('.input-emi').val(emi);
+
+            i++;
+        }
+
+        for (a = i; a <= $('.focus').last().data('month'); a++) {
+            console.log(a);
+            $('#focus-' + a).remove();
+        }
+    });
+
+
+    function calculateEMI(p, n, r) {
+        r = r / 12 / 100;
+        var top = (r * p) * (Math.pow((1 + r), n));
+        var down = Math.pow((1 + r), n) - 1;
+        var ans = top / down;
+        return ans.toFixed(2);
+    }
+</script>        </div>
+                <!-- Modal -->
+        <!-- Modal -->
+        <div class="modal fade" id="my-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content" id="my-modal-content">
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+
+
+        <div class="modal fade" id="my-message" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">
+                            <div id="my-message-heading">
+                            </div>
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-lg-12 col-sm-12 col-xs-12 col-md-12">
+                                <p>
+                                    <span id="my-message-content">
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div><!-- /.modal -->
+            </body>
+</html>
